@@ -62,6 +62,20 @@
       "height": 15,
       "ascent": 11,
       "chars": ["\uF009"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/namemc.png",
+      "height": 15,
+      "ascent": 11,
+      "chars": ["\uF00A"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/discord.png",
+      "height": 15,
+      "ascent": 11,
+      "chars": ["\uF00B"]
     }
   ]
 }

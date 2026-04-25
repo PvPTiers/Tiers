@@ -23,18 +23,10 @@ import static com.tiers.TiersClient.*;
 public class SuperProfile {
     private static final ScheduledExecutorService updateAndRecoverFailedRequestsScheduler = Executors.newSingleThreadScheduledExecutor();
     public static final CopyOnWriteArrayList<SuperProfile> failedSuperProfiles = new CopyOnWriteArrayList<>();
-    public static final AtomicInteger MCTiersRequests = new AtomicInteger(0);
     public static final AtomicInteger PvPTiersRequests = new AtomicInteger(0);
-    public static final AtomicInteger SubtiersRequests = new AtomicInteger(0);
-    public static final AtomicInteger failedMCTiersRequests = new AtomicInteger(0);
     public static final AtomicInteger failedPvPTiersRequests = new AtomicInteger(0);
-    public static final AtomicInteger failedSubtiersRequests = new AtomicInteger(0);
-    public static final AtomicInteger failedMCTiersRequestsLastMinute = new AtomicInteger(0);
     public static final AtomicInteger failedPvPTiersRequestsLastMinute = new AtomicInteger(0);
-    public static final AtomicInteger failedSubtiersRequestsLastMinute = new AtomicInteger(0);
-    public static boolean isMCTiersDown = false;
     public static boolean isPvPTiersDown = false;
-    public static boolean isSubtiersDown = false;
     public static int numberOfMessages;
 
     public Status status = Status.SEARCHING;
@@ -55,17 +47,14 @@ public class SuperProfile {
     public String originalJson;
     public String apiUrl;
     public String uuid;
+    public String discordId;
     public boolean drawn;
     public boolean apiErrorShown;
     private Runnable onUpdate;
 
     protected SuperProfile() {
-        if (this instanceof MCTiersProfile)
-            MCTiersRequests.incrementAndGet();
         if (this instanceof PvPTiersProfile)
             PvPTiersRequests.incrementAndGet();
-        if (this instanceof SubtiersProfile)
-            SubtiersRequests.incrementAndGet();
     }
 
     static {
@@ -74,22 +63,15 @@ public class SuperProfile {
     }
 
     private static void updateDownStatus() {
-        isMCTiersDown = failedMCTiersRequestsLastMinute.get() > 3;
         isPvPTiersDown = failedPvPTiersRequestsLastMinute.get() > 3;
-        isSubtiersDown = failedSubtiersRequestsLastMinute.get() > 3;
     }
 
     private static void updateAndRecoverFailedRequests() {
-        failedMCTiersRequestsLastMinute.set(0);
         failedPvPTiersRequestsLastMinute.set(0);
-        failedSubtiersRequestsLastMinute.set(0);
 
         for (SuperProfile superProfile : SuperProfile.failedSuperProfiles) {
-            if (superProfile instanceof MCTiersProfile && isMCTiersDown)
-                continue;
+
             if (superProfile instanceof PvPTiersProfile && isPvPTiersDown)
-                continue;
-            if (superProfile instanceof SubtiersProfile && isSubtiersDown)
                 continue;
 
             SuperProfile.failedSuperProfiles.remove(superProfile);
@@ -107,17 +89,9 @@ public class SuperProfile {
         status = Status.SEARCHING;
         numberOfRequests = 0;
 
-        if (this instanceof MCTiersProfile) {
-            MCTiersRequests.incrementAndGet();
-            failedMCTiersRequests.decrementAndGet();
-        }
         if (this instanceof PvPTiersProfile) {
             PvPTiersRequests.incrementAndGet();
             failedPvPTiersRequests.decrementAndGet();
-        }
-        if (this instanceof SubtiersProfile) {
-            SubtiersRequests.incrementAndGet();
-            failedSubtiersRequests.decrementAndGet();
         }
     }
 
@@ -183,6 +157,9 @@ public class SuperProfile {
                 region = "Unknown";
             points = jsonObject.get("points").getAsInt();
             overallPosition = jsonObject.get("overall").getAsInt();
+
+            if (jsonObject.has("discord_id"))
+                discordId = jsonObject.get("discord_id").getAsString();
         } else {
             status = Status.NOT_EXISTING;
             return;
@@ -288,8 +265,6 @@ public class SuperProfile {
     private Text getOverallTooltip() {
         String overallTooltip = "Combat ";
 
-        if (this instanceof SubtiersProfile)
-            overallTooltip = "Subtiers ";
         if (!(this instanceof PvPTiersProfile) && points >= 400) overallTooltip += "Grandmaster";
         else if (!(this instanceof PvPTiersProfile) && points >= 250) overallTooltip += "Master";
         else if (this instanceof PvPTiersProfile && points >= 200) overallTooltip += "Master";
@@ -306,20 +281,10 @@ public class SuperProfile {
     private void failedRequest() {
         String message = null;
         synchronized (SuperProfile.class) {
-            if (this instanceof MCTiersProfile) {
-                failedMCTiersRequestsLastMinute.incrementAndGet();
-                if (failedMCTiersRequests.incrementAndGet() % 20 == 0)
-                    message = "[Tiers] MCTiers might be down. " + failedMCTiersRequests + " searches (out of " + MCTiersRequests + ") failed so far. Use '/tiers -status' for more info";
-            }
             if (this instanceof PvPTiersProfile) {
                 failedPvPTiersRequestsLastMinute.incrementAndGet();
                 if (failedPvPTiersRequests.incrementAndGet() % 20 == 0)
                     message = "[Tiers] PvPTiers might be down. " + failedPvPTiersRequests + " searches (out of " + PvPTiersRequests + ") failed so far. Use '/tiers -status' for more info";
-            }
-            if (this instanceof SubtiersProfile) {
-                failedSubtiersRequestsLastMinute.incrementAndGet();
-                if (failedSubtiersRequests.incrementAndGet() % 20 == 0)
-                    message = "[Tiers] Subtiers might be down. " + failedSubtiersRequests + " searches (out of " + SubtiersRequests + ") failed so far. Use '/tiers -status' for more info";
             }
         }
 
@@ -338,18 +303,10 @@ public class SuperProfile {
 
     public String[] checkOutages() {
         String[] message = new String[3];
-        if (this instanceof MCTiersProfile) {
-            message[0] = "MCTiers might be down";
-            message[1] = failedMCTiersRequests + " searches (out of " + MCTiersRequests + " profiles) failed so far";
-        }
 
         if (this instanceof PvPTiersProfile) {
             message[0] = "PvPTiers might be down";
             message[1] = failedPvPTiersRequests + " searches (out of " + PvPTiersRequests + " profiles) failed so far";
-        }
-        if (this instanceof SubtiersProfile) {
-            message[0] = "Subtiers might be down";
-            message[1] = failedSubtiersRequests + " searches (out of " + SubtiersRequests + " profiles) failed so far";
         }
 
         message[2] = "Tiers will automatically try to update all failed requests";
@@ -358,12 +315,8 @@ public class SuperProfile {
 
     public static void resetRequestCounters() {
         synchronized (SuperProfile.class) {
-            MCTiersRequests.set(0);
-            failedMCTiersRequests.set(0);
             PvPTiersRequests.set(0);
             failedPvPTiersRequests.set(0);
-            SubtiersRequests.set(0);
-            failedSubtiersRequests.set(0);
         }
     }
 

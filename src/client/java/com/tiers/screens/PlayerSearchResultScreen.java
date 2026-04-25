@@ -4,9 +4,7 @@ import com.tiers.TiersClient;
 import com.tiers.profile.GameMode;
 import com.tiers.profile.PlayerProfile;
 import com.tiers.profile.Status;
-import com.tiers.profile.types.MCTiersProfile;
 import com.tiers.profile.types.PvPTiersProfile;
-import com.tiers.profile.types.SubtiersProfile;
 import com.tiers.profile.types.SuperProfile;
 import com.tiers.textures.ColorControl;
 import com.tiers.textures.Icons;
@@ -68,8 +66,6 @@ public class PlayerSearchResultScreen extends Screen {
         separator = height / 23;
         small = width < 575 || height < 420;
         tooSmall = width < 450 || height < 262;
-        int firstListX = (int) (centerX - width / 3.5) - 20;
-        int thirdListX = (int) (centerX + width / 3.5) + 20;
         int avatarY = height / 55 + 12;
 
         super.render(context, mouseX, mouseY, delta);
@@ -94,9 +90,7 @@ public class PlayerSearchResultScreen extends Screen {
 
         context.drawCenteredTextWithShadow(textRenderer, playerProfile.getFullName(), centerX, height / 55, Colors.WHITE);
 
-        drawCategoryList(context, MCTiersProfile.MCTIERS_IMAGE, playerProfile.profileMCTiers, firstListX, listY);
         drawCategoryList(context, PvPTiersProfile.PVPTIERS_IMAGE, playerProfile.profilePvPTiers, centerX, listY);
-        drawCategoryList(context, SubtiersProfile.SUBTIERS_IMAGE, playerProfile.profileSubtiers, thirdListX, listY);
     }
 
     private void drawCategoryList(DrawContext context, Identifier image, SuperProfile superProfile, int x, int y) {
@@ -105,12 +99,7 @@ public class PlayerSearchResultScreen extends Screen {
             return;
         }
 
-        if (image == MCTiersProfile.MCTIERS_IMAGE)
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, image, x - 64, (int) (y + 2.4 * separator) + 4 - 38, 0, 0, 128, 24, 128, 24);
-        else if (image == PvPTiersProfile.PVPTIERS_IMAGE)
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, image, x - 12, (int) (y + 2.4 * separator) + 4 - 38, 0, 0, 24, 24, 24, 24);
-        else
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, image, (int) (x - 15.5), (int) (y + 2.4 * separator) - 38, 0, 0, 31, 31, 31, 31);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, image, x - 12, (int) (y + 2.4 * separator) + 4 - 38, 0, 0, 24, 24, 24, 24);
 
         if (superProfile.status == Status.SEARCHING) {
             context.drawCenteredTextWithShadow(textRenderer, "Searching...", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("green"));
@@ -267,7 +256,7 @@ public class PlayerSearchResultScreen extends Screen {
     }
 
     @Override
-    protected void init() {
+    public void init() {
         playerProfile.resetDrawnStatus();
 
         dimensionsWarning = ButtonWidget.builder(Text.of("ℹ"), (buttonWidget) -> {
@@ -276,14 +265,21 @@ public class PlayerSearchResultScreen extends Screen {
         dimensionsWarning.visible = small;
         if (tooSmall) {
             dimensionsWarning.setMessage(Text.of("⚠"));
-            dimensionsWarning.setTooltip(Tooltip.of(Text.of("Your window dimensions (" + width + "x" + height + ") are too small\nLower the GUI scale or make the window bigger! (min: 450x262)")));
+            dimensionsWarning.setTooltip(Tooltip.of(Text.of("Your window dimensions (" + width + "x" + height + ") are too small\nLower the GUI scale or make the window bigger! (min: 430x262)")));
         }
 
         addDrawableChild(dimensionsWarning);
 
+        addDrawableChild(ButtonWidget.builder(Icons.NAMEMC, (ignored) -> {
+            MinecraftClient minecraftClient = MinecraftClient.getInstance();
+            minecraftClient.setScreen(new ConfirmLinkScreen((confirmed) -> {
+                if (confirmed)
+                    Util.getOperatingSystem().open("https://namemc.com/profile/" + playerProfile.uuid);
+                minecraftClient.setScreen(this);
+            }, "https://namemc.com/profile/" + playerProfile.uuid, true));
+        }).dimensions(width - 20 - 5, height - 20 - 5, 20, 20).tooltip(Tooltip.of(Text.literal("Open " + playerProfile.targetName + "'s NameMC page"))).build());
+
         addDrawableChild(ButtonWidget.builder(Text.of("Update"), (buttonWidget) -> TiersClient.showUpdatedPlayerProfile(playerProfile, true)).dimensions(5, height - 20 - 5, 68, 20).tooltip(Tooltip.of(Text.of("Reload the player profile"))).build());
-        addDrawableChild(ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> playerProfile.updateTierlistProfiles(1)).dimensions(5, height - 20 - 5 - 22, 20, 20).tooltip(Tooltip.of(Text.of("Update MCTiers results"))).build());
-        addDrawableChild(ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> playerProfile.updateTierlistProfiles(2)).dimensions(5 + 24, height - 20 - 5 - 22, 20, 20).tooltip(Tooltip.of(Text.of("Update PvPTiers results"))).build());
-        addDrawableChild(ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> playerProfile.updateTierlistProfiles(3)).dimensions(5 + 24 + 24, height - 20 - 5 - 22, 20, 20).tooltip(Tooltip.of(Text.of("Update Subtiers results"))).build());
+        addDrawableChild(ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> playerProfile.updateTierlistProfiles(2)).dimensions(5, height - 20 - 5 - 22, 20, 20).tooltip(Tooltip.of(Text.literal(("Update PvPTiers results")))).build());
     }
 }

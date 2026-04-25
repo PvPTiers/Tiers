@@ -3,7 +3,7 @@
   "id": "tiers",
   "version": "${version}",
   "name": "Tiers",
-  "description": "Official Tier Tagger of PvPTiers. Supports other Tierlists: MCTiers, Subtiers",
+  "description": "Official PvPTiers tiers display mod",
   "authors": [
     "Flavio6561"
   ],

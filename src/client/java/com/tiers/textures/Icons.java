@@ -23,6 +23,8 @@ public class Icons {
     public static final Text TAB_DISABLED = Text.literal("\uF007").setStyle(Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("minecraft", "misc"))));
     public static final Text CHAT = Text.literal("\uF008").setStyle(Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("minecraft", "misc"))));
     public static final Text CHAT_DISABLED = Text.literal("\uF009").setStyle(Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("minecraft", "misc"))));
+    public static final Text NAMEMC = Text.literal("\uF00A").setStyle(Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("minecraft", "misc"))));
+    public static final Text DISCORD = Text.literal("\uF00B").setStyle(Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("minecraft", "misc"))));
 
     public enum Type {
         CLASSIC,

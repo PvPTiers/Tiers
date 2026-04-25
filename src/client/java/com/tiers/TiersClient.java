@@ -69,14 +69,8 @@ public class TiersClient implements ClientModInitializer {
     public static ModesTierDisplay displayMode = ModesTierDisplay.ADAPTIVE_HIGHEST;
     public static Icons.Type activeIcons = Icons.Type.PVPTIERS;
 
-    public static DisplayStatus positionMCTiers = DisplayStatus.OFF;
-    public static Mode activeMCTiersMode = Mode.MCTIERS_VANILLA;
-
     public static DisplayStatus positionPvPTiers = DisplayStatus.LEFT;
     public static Mode activePvPTiersMode = Mode.PVPTIERS_CRYSTAL;
-
-    public static DisplayStatus positionSubtiers = DisplayStatus.RIGHT;
-    public static Mode activeSubtiersMode = Mode.SUBTIERS_MINECART;
 
     public static KeyBinding autoDetectKey;
     public static KeyBinding openClosestPlayerProfile;
@@ -156,12 +150,8 @@ public class TiersClient implements ClientModInitializer {
         MinecraftClient.getInstance().execute(() -> {
             playerProfiles.forEach(playerProfile -> {
                 if (playerProfile.status == Status.READY) {
-                    if (playerProfile.profileMCTiers.status == Status.READY)
-                        playerProfile.profileMCTiers.parseJson(playerProfile.profileMCTiers.originalJson);
                     if (playerProfile.profilePvPTiers.status == Status.READY)
                         playerProfile.profilePvPTiers.parseJson(playerProfile.profilePvPTiers.originalJson);
-                    if (playerProfile.profileSubtiers.status == Status.READY)
-                        playerProfile.profileSubtiers.parseJson(playerProfile.profileSubtiers.originalJson);
                 }
                 playerProfile.updateAppendingText();
             });
@@ -217,14 +207,8 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("Auto kit detect has been disabled due to manual gamemode changes", "red"), false);
         }
 
-        if (positionMCTiers.toString().equalsIgnoreCase("RIGHT"))
-            return Text.literal("Right (MCTiers) is now displaying ").setStyle(Style.EMPTY.withColor(Colors.WHITE)).append(cycleMCTiersMode());
-
         if (positionPvPTiers.toString().equalsIgnoreCase("RIGHT"))
             return Text.literal("Right (PvPTiers) is now displaying ").setStyle(Style.EMPTY.withColor(Colors.WHITE)).append(cyclePvPTiersMode());
-
-        if (positionSubtiers.toString().equalsIgnoreCase("RIGHT"))
-            return Text.literal("Right (Subtiers) is now displaying ").setStyle(Style.EMPTY.withColor(Colors.WHITE)).append(cycleSubtiersMode());
 
         return null;
     }
@@ -235,40 +219,22 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("Auto kit detect has been disabled due to manual gamemode changes", "red"), false);
         }
 
-        if (positionMCTiers.toString().equalsIgnoreCase("LEFT"))
-            return Text.literal("Left (MCTiers) is now displaying ").setStyle(Style.EMPTY.withColor(Colors.WHITE)).append(cycleMCTiersMode());
-
         if (positionPvPTiers.toString().equalsIgnoreCase("LEFT"))
             return Text.literal("Left (PvPTiers) is now displaying ").setStyle(Style.EMPTY.withColor(Colors.WHITE)).append(cyclePvPTiersMode());
-
-        if (positionSubtiers.toString().equalsIgnoreCase("LEFT"))
-            return Text.literal("Left (Subtiers) is now displaying ").setStyle(Style.EMPTY.withColor(Colors.WHITE)).append(cycleSubtiersMode());
 
         return null;
     }
 
     public static Text getRightIcon() {
-        if (positionMCTiers.toString().equalsIgnoreCase("RIGHT"))
-            return activeMCTiersMode.getIcon();
-
         if (positionPvPTiers.toString().equalsIgnoreCase("RIGHT"))
             return activePvPTiersMode.getIcon();
-
-        if (positionSubtiers.toString().equalsIgnoreCase("RIGHT"))
-            return activeSubtiersMode.getIcon();
 
         return Text.empty();
     }
 
     public static Text getLeftIcon() {
-        if (positionMCTiers.toString().equalsIgnoreCase("LEFT"))
-            return activeMCTiersMode.getIcon();
-
         if (positionPvPTiers.toString().equalsIgnoreCase("LEFT"))
             return activePvPTiersMode.getIcon();
-
-        if (positionSubtiers.toString().equalsIgnoreCase("LEFT"))
-            return activeSubtiersMode.getIcon();
 
         return Text.empty();
     }
@@ -360,13 +326,9 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("", Colors.WHITE), false);
             sendMessageToPlayer(Icons.colorText("Player profiles status:", "green"), false);
             sendMessageToPlayer(Icons.colorText("Cached players: " + PlayerProfile.playerProfilesRequests.get() + " (" + PlayerProfile.failedPlayerProfilesRequests.get() + " failed)", Colors.WHITE), false);
-            sendMessageToPlayer(Icons.colorText("MCTiers requests failed: " + SuperProfile.failedMCTiersRequests + "/" + SuperProfile.MCTiersRequests + " (failed / requested)", Colors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("PvPTiers requests failed: " + SuperProfile.failedPvPTiersRequests + "/" + SuperProfile.PvPTiersRequests + " (failed / requested)", Colors.YELLOW), false);
-            sendMessageToPlayer(Icons.colorText("Subtiers requests failed: " + SuperProfile.failedSubtiersRequests + "/" + SuperProfile.SubtiersRequests + " (failed / requested)", Colors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("", Colors.WHITE), false);
-            sendMessageToPlayer(Icons.colorText("MCTiers status | is down? " + SuperProfile.isMCTiersDown + " | Failed request in last minute: " + SuperProfile.failedMCTiersRequestsLastMinute, Colors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("PvPTiers status | is down? " + SuperProfile.isPvPTiersDown + " | Failed request in last minute: " + SuperProfile.failedPvPTiersRequestsLastMinute, Colors.YELLOW), false);
-            sendMessageToPlayer(Icons.colorText("Subtiers status | is down? " + SuperProfile.isSubtiersDown + " | Failed request in last minute: " + SuperProfile.failedSubtiersRequestsLastMinute, Colors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("Tiers will try to recover all failed requests once the services come back up", Colors.WHITE), false);
             sendMessageToPlayer(Icons.colorText("", Colors.WHITE), false);
         } else if (playerName.startsWith("-")) {
@@ -481,22 +443,10 @@ public class TiersClient implements ClientModInitializer {
                 ((DataTrackerAccessor) textDisplay.getDataTracker()).invokeSet(TextDisplayAccessor.getTEXT(), textDisplay.getText(), true);
     }
 
-    public static Text cycleMCTiersMode() {
-        activeMCTiersMode = cycleEnum(activeMCTiersMode, Mode.getMCTiersValues());
-        ConfigManager.saveConfig();
-        return activeMCTiersMode.getTextLabel();
-    }
-
     public static Text cyclePvPTiersMode() {
         activePvPTiersMode = cycleEnum(activePvPTiersMode, Mode.getPvPTiersValues());
         ConfigManager.saveConfig();
         return activePvPTiersMode.getTextLabel();
-    }
-
-    public static Text cycleSubtiersMode() {
-        activeSubtiersMode = cycleEnum(activeSubtiersMode, Mode.getSubtiersValues());
-        ConfigManager.saveConfig();
-        return activeSubtiersMode.getTextLabel();
     }
 
     public static void cycleDisplayMode() {
