@@ -49,7 +49,7 @@ public class ConfigScreen extends Screen {
     private ButtonWidget clearPlayerCache;
     private ButtonWidget autoKitDetect;
     private ButtonWidget leftPvPTiers;
-    private ButtonWidget centerPvPTiers;
+//    private ButtonWidget centerPvPTiers;
     private ButtonWidget rightPvPTiers;
     private ButtonWidget activeRightMode;
     private ButtonWidget activeLeftMode;
@@ -119,9 +119,9 @@ public class ConfigScreen extends Screen {
         cycleDisplayMode.setPosition(width / 2 - 90, distance + 50);
         autoKitDetect.setPosition(width / 2 - 90, distance + 75);
         clearPlayerCache.setPosition(width - 88 - 5, height - 20 - 5);
-        leftPvPTiers.setPosition(centerX - 10 - 24, distance + 145);
-        centerPvPTiers.setPosition(centerX - 10, distance + 145);
-        rightPvPTiers.setPosition(centerX - 10 + 24, distance + 145);
+        leftPvPTiers.setPosition(centerX - 10 - 12, distance + 145);
+//        centerPvPTiers.setPosition(centerX - 10, distance + 145);
+        rightPvPTiers.setPosition(centerX - 10 + 12, distance + 145);
         activeRightMode.setPosition(centerX + 90 + 4, distance + 75);
         activeLeftMode.setPosition(centerX - 90 - 20 - 4, distance + 75);
         enableOwnProfile.setPosition(width - 20 - 5 - 88 - 4, height - 20 - 5);
@@ -211,26 +211,27 @@ public class ConfigScreen extends Screen {
 
         leftPvPTiers = ButtonWidget.builder(Text.of("←"), (buttonWidget) -> {
             TiersClient.positionPvPTiers = TiersClient.DisplayStatus.LEFT;
-            updateLeftSwitcher(buttonWidget, centerPvPTiers, rightPvPTiers);
-        }).dimensions(centerX - 10 - 24, distance + 145, 20, 20).tooltip(Tooltip.of(Text.of("Display PvPTiers on the left"))).build();
+//            updateLeftSwitcher(buttonWidget, centerPvPTiers, rightPvPTiers);
+            updateLeftSwitcher(buttonWidget, rightPvPTiers);
+        }).dimensions(centerX - 10 - 12, distance + 145, 20, 20).tooltip(Tooltip.of(Text.of("Display PvPTiers on the left"))).build();
 
-        centerPvPTiers = ButtonWidget.builder(Text.of("●"), (buttonWidget) -> {
-            TiersClient.positionPvPTiers = TiersClient.DisplayStatus.OFF;
-            leftPvPTiers.active = true;
-            buttonWidget.active = false;
-            rightPvPTiers.active = true;
-            ConfigManager.saveConfig();
-        }).dimensions(centerX - 10, distance + 145, 20, 20).tooltip(Tooltip.of(Text.of("Disable PvPTiers"))).build();
+//        centerPvPTiers = ButtonWidget.builder(Text.of("●"), (buttonWidget) -> {
+//            TiersClient.positionPvPTiers = TiersClient.DisplayStatus.OFF;
+//            leftPvPTiers.active = true;
+//            buttonWidget.active = false;
+//            rightPvPTiers.active = true;
+//            ConfigManager.saveConfig();
+//        }).dimensions(centerX - 10, distance + 145, 20, 20).tooltip(Tooltip.of(Text.of("Disable PvPTiers"))).build();
 
         rightPvPTiers = ButtonWidget.builder(Text.of("→"), (buttonWidget) -> {
             TiersClient.positionPvPTiers = TiersClient.DisplayStatus.RIGHT;
-            updateRightSwitcher(buttonWidget, leftPvPTiers, centerPvPTiers);
-        }).dimensions(centerX - 10 + 24, distance + 145, 20, 20).tooltip(Tooltip.of(Text.of("Display PvPTiers on the right"))).build();
-
+//            updateRightSwitcher(buttonWidget, leftPvPTiers, centerPvPTiers);
+            updateRightSwitcher(buttonWidget, leftPvPTiers);
+        }).dimensions(centerX - 10 + 12, distance + 145, 20, 20).tooltip(Tooltip.of(Text.of("Display PvPTiers on the right"))).build();
 
         switch (TiersClient.positionPvPTiers) {
             case RIGHT -> rightPvPTiers.active = false;
-            case OFF -> centerPvPTiers.active = false;
+//            case OFF -> centerPvPTiers.active = false;
             case LEFT -> leftPvPTiers.active = false;
         }
 
@@ -273,20 +274,34 @@ public class ConfigScreen extends Screen {
 
         updateVisibilities();
 
-        Stream.of(toggleMod, toggleIcons, toggleTab, toggleChat, toggleSeparatorMode, cycleDisplayMode, autoKitDetect, clearPlayerCache, leftPvPTiers, centerPvPTiers, rightPvPTiers, activeRightMode, activeLeftMode, enableOwnProfile, useClassicIcons, usePvPTiersIcons, useMCTiersIcons)
+//        Stream.of(toggleMod, toggleIcons, toggleTab, toggleChat, toggleSeparatorMode, cycleDisplayMode, autoKitDetect, clearPlayerCache, leftPvPTiers, centerPvPTiers, rightPvPTiers, activeRightMode, activeLeftMode, enableOwnProfile, useClassicIcons, usePvPTiersIcons, useMCTiersIcons)
+//                .forEach(this::addDrawableChild);
+        Stream.of(toggleMod, toggleIcons, toggleTab, toggleChat, toggleSeparatorMode, cycleDisplayMode, autoKitDetect, clearPlayerCache, leftPvPTiers, rightPvPTiers, activeRightMode, activeLeftMode, enableOwnProfile, useClassicIcons, usePvPTiersIcons, useMCTiersIcons)
                 .forEach(this::addDrawableChild);
     }
 
-    private void updateRightSwitcher(ButtonWidget buttonWidget, ButtonWidget leftMCTiers, ButtonWidget centerMCTiers) {
+//    private void updateRightSwitcher(ButtonWidget buttonWidget, ButtonWidget leftMCTiers, ButtonWidget centerMCTiers) {
+//        leftMCTiers.active = true;
+//        centerMCTiers.active = true;
+//        buttonWidget.active = false;
+//        ConfigManager.saveConfig();
+//    }
+//
+//    private void updateLeftSwitcher(ButtonWidget buttonWidget, ButtonWidget centerMCTiers, ButtonWidget rightMCTiers) {
+//        buttonWidget.active = false;
+//        centerMCTiers.active = true;
+//        rightMCTiers.active = true;
+//        ConfigManager.saveConfig();
+//    }
+
+    private void updateRightSwitcher(ButtonWidget buttonWidget, ButtonWidget leftMCTiers) {
         leftMCTiers.active = true;
-        centerMCTiers.active = true;
         buttonWidget.active = false;
         ConfigManager.saveConfig();
     }
 
-    private void updateLeftSwitcher(ButtonWidget buttonWidget, ButtonWidget centerMCTiers, ButtonWidget rightMCTiers) {
+    private void updateLeftSwitcher(ButtonWidget buttonWidget, ButtonWidget rightMCTiers) {
         buttonWidget.active = false;
-        centerMCTiers.active = true;
         rightMCTiers.active = true;
         ConfigManager.saveConfig();
     }
