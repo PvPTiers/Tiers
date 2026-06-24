@@ -21,7 +21,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.tiers.TiersClient.*;
 
 public class SuperProfile {
-    private static final ScheduledExecutorService updateAndRecoverFailedRequestsScheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService updateAndRecoverFailedRequestsScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "tiers-superprofile-scheduler");
+        t.setDaemon(true);
+        return t;
+    });
     public static final CopyOnWriteArrayList<SuperProfile> failedSuperProfiles = new CopyOnWriteArrayList<>();
     public static final AtomicInteger PvPTiersRequests = new AtomicInteger(0);
     public static final AtomicInteger failedPvPTiersRequests = new AtomicInteger(0);

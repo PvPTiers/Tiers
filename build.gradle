@@ -60,7 +60,8 @@ modrinth {
     projectId = "bubOj4AD"
     versionNumber = "${project.version}"
     versionName = "Tiers ${project.version}"
-    changelog = "[Version ${project.simple_version}](https://github.com/PvPTiers/Tiers/wiki/Version-changelogs)"
+    def changelogVersion = project.simple_version.replace('.', '')
+    changelog = "[Version ${project.simple_version}](https://github.com/PvPTiers/Tiers/wiki/Version-changelogs#version-${changelogVersion})"
     uploadFile = remapJar
     versionType = "beta"
     gameVersions = [project.minecraft_version]
