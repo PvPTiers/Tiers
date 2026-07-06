@@ -139,7 +139,7 @@ public class TiersClient implements ClientModInitializer {
         PlayerProfile newProfile = new PlayerProfile(playerName, true);
 
         // On online-mode servers the GameProfile already carries the real Mojang UUID, so the username->UUID API round-trip is unnecessary.
-        if (knownUuid != null && PlayerProfile.isRealUuid(knownUuid) && newProfile.status == Status.SEARCHING)
+        if (PlayerProfile.isRealUuid(knownUuid) && newProfile.status == Status.SEARCHING)
             newProfile.completeWithKnownUuid(knownUuid);
         else if (priority)
             PlayerProfileQueue.putFirstInQueue(newProfile);
