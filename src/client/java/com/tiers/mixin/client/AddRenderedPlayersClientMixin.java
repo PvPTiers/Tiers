@@ -14,6 +14,6 @@ public abstract class AddRenderedPlayersClientMixin {
     @Inject(at = @At(value = "TAIL"), method = "<init>")
     private void onConstruct(final Level level, final GameProfile gameProfile, CallbackInfo ci) {
         if (TiersClient.toggleMod)
-            TiersClient.addGetPlayer(gameProfile.name(), false);
+            TiersClient.addGetPlayer(gameProfile.name(), false, gameProfile.id());
     }
 }

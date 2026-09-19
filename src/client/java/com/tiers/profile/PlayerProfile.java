@@ -64,6 +64,8 @@ public class PlayerProfile {
     private Component deepReplaceName;
 
     private int numberOfRequests;
+    public int recoveryAttempts;
+    public long nextRetryAt;
     private final boolean regular;
 
     private static final String UUID_API_1 = "https://playerdb.co/api/player/minecraft/";
@@ -281,6 +283,10 @@ public class PlayerProfile {
             uuid = jsonObject.get("id").getAsString();
         }
 
+        finishResolution();
+    }
+
+    private void finishResolution() {
         if (uuid.isEmpty()) {
             status = Status.NOT_EXISTING;
             return;
@@ -297,6 +303,19 @@ public class PlayerProfile {
         updateTierlistProfiles(0);
         status = Status.READY;
         readyPlayerProfiles.put(targetName, this);
+    }
+
+    public void completeWithKnownUuid(java.util.UUID knownUuid) {
+        if (status != Status.SEARCHING)
+            return;
+
+        uuid = knownUuid.toString().replace("-", "");
+        finishResolution();
+    }
+
+    public static boolean isRealUuid(java.util.UUID id) {
+        // Offline-mode servers derive version-3 UUIDs from the name; only version-4 UUIDs are real Mojang accounts safe to skip the lookup for.
+        return id != null && id.version() == 4;
     }
 
     private void failedRequest() {

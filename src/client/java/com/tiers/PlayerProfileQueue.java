@@ -74,9 +74,22 @@ public class PlayerProfileQueue {
         queue.remove(playerProfile);
     }
 
+    private static final int MAX_RECOVERY_ATTEMPTS = 6;
+
     private static void recoverFailedRequests() {
+        long now = System.currentTimeMillis();
         for (PlayerProfile playerProfile : PlayerProfile.failedPlayerProfiles) {
+            if (now < playerProfile.nextRetryAt)
+                continue;
+
             PlayerProfile.failedPlayerProfiles.remove(playerProfile);
+
+            // Cap retries with exponential backoff so outages don't generate unbounded API requests; /tiers -clear allows a manual retry.
+            if (playerProfile.recoveryAttempts >= MAX_RECOVERY_ATTEMPTS)
+                continue;
+
+            playerProfile.recoveryAttempts++;
+            playerProfile.nextRetryAt = now + TimeUnit.MINUTES.toMillis(1L << Math.min(playerProfile.recoveryAttempts, 4));
             playerProfile.prepareToRebuild();
             putLastInQueue(playerProfile);
         }

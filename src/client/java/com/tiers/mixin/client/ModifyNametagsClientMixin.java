@@ -1,6 +1,7 @@
 package com.tiers.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.mojang.authlib.GameProfile;
 import com.tiers.TiersClient;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -13,6 +14,9 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class ModifyNametagsClientMixin {
     @Shadow
     public abstract String getScoreboardName();
+
+    @Shadow
+    public abstract GameProfile getGameProfile();
 
     @Unique
     private int tiers_cacheVersion;
@@ -33,6 +37,6 @@ public abstract class ModifyNametagsClientMixin {
         tiers_cacheVersion = TiersClient.cacheVersion;
         tiers_lastOriginal = original;
 
-        return tiers_cached = TiersClient.addGetPlayer(getScoreboardName(), false).getFullName(original);
+        return tiers_cached = TiersClient.addGetPlayer(getScoreboardName(), false, getGameProfile().id()).getFullName(original);
     }
 }
