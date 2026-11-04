@@ -27,6 +27,12 @@ public class Icons {
     public static final Component CHAT_DISABLED = Component.literal("\uF009").setStyle(Style.EMPTY.withFont(fontDescription));
     public static final Component NAMEMC = Component.literal("\uF00A").setStyle(Style.EMPTY.withFont(fontDescription));
     public static final Component DISCORD = Component.literal("\uF00B").setStyle(Style.EMPTY.withFont(fontDescription));
+    public static final Component REGION = Component.literal("\uF00C").setStyle(Style.EMPTY.withFont(fontDescription));
+    public static final Component REGION_DISABLED = Component.literal("\uF00D").setStyle(Style.EMPTY.withFont(fontDescription));
+    public static final Component PEAK = Component.literal("\uF00E").setStyle(Style.EMPTY.withFont(fontDescription));
+    public static final Component PEAK_DISABLED = Component.literal("\uF00F").setStyle(Style.EMPTY.withFont(fontDescription));
+    public static final Component LEVER_ON = Component.literal("\uF011").setStyle(Style.EMPTY.withFont(fontDescription));
+    public static final Component LEVER_OFF = Component.literal("\uF012").setStyle(Style.EMPTY.withFont(fontDescription));
 
     public enum Type {
         CLASSIC,
