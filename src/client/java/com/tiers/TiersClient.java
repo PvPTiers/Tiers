@@ -1,6 +1,6 @@
 package com.tiers;
 
-import com.mojang.blaze3d.platform.GLX;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.context.CommandContext;
@@ -24,6 +24,7 @@ import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -39,9 +40,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.apache.commons.io.FileUtils;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +65,8 @@ public class TiersClient implements ClientModInitializer {
     public static volatile boolean cachesDirty = false;
 
     public static boolean toggleMod = true;
+    public static boolean toggleRegion = true;
+    public static boolean togglePeak = false;
     public static boolean toggleIcons = true;
     public static boolean toggleTab = true;
     public static boolean toggleChat = true;
@@ -71,14 +75,14 @@ public class TiersClient implements ClientModInitializer {
     public static ModesTierDisplay displayMode = ModesTierDisplay.ADAPTIVE_HIGHEST;
     public static Icons.Type activeIcons = Icons.Type.PVPTIERS;
 
-//    public static DisplayStatus positionMCTiers = DisplayStatus.OFF;
-//    public static Mode activeMCTiersMode = Mode.MCTIERS_VANILLA;
+    public static DisplayStatus positionMCTiers = DisplayStatus.OFF;
+    public static Mode activeMCTiersMode = Mode.MCTIERS_VANILLA;
 
     public static DisplayStatus positionPvPTiers = DisplayStatus.LEFT;
     public static Mode activePvPTiersMode = Mode.PVPTIERS_CRYSTAL;
 
-//    public static DisplayStatus positionSubtiers = DisplayStatus.RIGHT;
-//    public static Mode activeSubtiersMode = Mode.SUBTIERS_MINECART;
+    public static DisplayStatus positionSubtiers = DisplayStatus.OFF;
+    public static Mode activeSubtiersMode = Mode.SUBTIERS_MINECART;
 
     public static KeyMapping autoDetectKey;
     public static KeyMapping openClosestPlayerProfile;
@@ -100,15 +104,15 @@ public class TiersClient implements ClientModInitializer {
         });
 
         KeyMapping.Category category = KeyMapping.Category.register(Identifier.parse("tiers"));
-        autoDetectKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Auto Detect Kit", GLFW.GLFW_KEY_Y, category));
-        openClosestPlayerProfile = KeyMappingHelper.registerKeyMapping(new KeyMapping("Open Closest Player Profile", GLFW.GLFW_KEY_H, category));
-        cycleRightKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Cycle Right Gamemodes", GLFW.GLFW_KEY_I, category));
-        cycleLeftKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Cycle Left Gamemodes", GLFW.GLFW_KEY_U, category));
+        autoDetectKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Auto Detect Kit", InputConstants.KEY_Y, category));
+        openClosestPlayerProfile = KeyMappingHelper.registerKeyMapping(new KeyMapping("Open Closest Player Profile", InputConstants.KEY_H, category));
+        cycleRightKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Cycle Right Gamemodes", InputConstants.KEY_I, category));
+        cycleLeftKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Cycle Left Gamemodes", InputConstants.KEY_U, category));
 
         ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(Identifier.parse("tiers"), new ColorLoader());
         ClientTickEvents.END_CLIENT_TICK.register(TiersClient::checkKeys);
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
-            if (toggleAutoKitDetect)
+            if (toggleAutoKitDetect && toggleMod)
                 InventoryChecker.checkInventory(minecraft, false);
             if (cachesDirty) {
                 cachesDirty = false;
@@ -158,12 +162,12 @@ public class TiersClient implements ClientModInitializer {
         Minecraft.getInstance().execute(() -> {
             playerProfiles.forEach(playerProfile -> {
                 if (playerProfile.status == Status.READY) {
-//                    if (playerProfile.profileMCTiers.status == Status.READY)
-//                        playerProfile.profileMCTiers.parseJson(playerProfile.profileMCTiers.originalJson);
+                    if (playerProfile.profileMCTiers.status == Status.READY)
+                        playerProfile.profileMCTiers.parseJson(playerProfile.profileMCTiers.originalJson);
                     if (playerProfile.profilePvPTiers.status == Status.READY)
                         playerProfile.profilePvPTiers.parseJson(playerProfile.profilePvPTiers.originalJson);
-//                    if (playerProfile.profileSubtiers.status == Status.READY)
-//                        playerProfile.profileSubtiers.parseJson(playerProfile.profileSubtiers.originalJson);
+                    if (playerProfile.profileSubtiers.status == Status.READY)
+                        playerProfile.profileSubtiers.parseJson(playerProfile.profileSubtiers.originalJson);
                 }
                 playerProfile.updateAppendingText();
             });
@@ -180,7 +184,7 @@ public class TiersClient implements ClientModInitializer {
         try (Level level = self.level()) {
             Player playerEntity = level.players().stream()
                     .filter(player -> player != self)
-                    .filter(player -> self.distanceTo(player) < Minecraft.getInstance().levelRenderer.getLastViewDistance())
+                    .filter(player -> self.distanceTo(player) < Minecraft.getInstance().options.renderDistance().get() * 16)
                     .min(Comparator.comparingDouble(self::distanceTo))
                     .orElse(null);
 
@@ -224,14 +228,14 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("Auto kit detect has been disabled due to manual gamemode changes", "red"), false);
         }
 
-//        if (positionMCTiers.toString().equalsIgnoreCase("RIGHT"))
-//            return Component.literal("Right (MCTiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleMCTiersMode());
+        if (positionMCTiers.toString().equalsIgnoreCase("RIGHT"))
+            return Component.literal("Right (MCTiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleMCTiersMode());
 
         if (positionPvPTiers.toString().equalsIgnoreCase("RIGHT"))
             return Component.literal("Right (PvPTiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cyclePvPTiersMode());
 
-//        if (positionSubtiers.toString().equalsIgnoreCase("RIGHT"))
-//            return Component.literal("Right (Subtiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleSubtiersMode());
+        if (positionSubtiers.toString().equalsIgnoreCase("RIGHT"))
+            return Component.literal("Right (Subtiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleSubtiersMode());
 
         return null;
     }
@@ -242,40 +246,40 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("Auto kit detect has been disabled due to manual gamemode changes", "red"), false);
         }
 
-//        if (positionMCTiers.toString().equalsIgnoreCase("LEFT"))
-//            return Component.literal("Left (MCTiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleMCTiersMode());
+        if (positionMCTiers.toString().equalsIgnoreCase("LEFT"))
+            return Component.literal("Left (MCTiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleMCTiersMode());
 
         if (positionPvPTiers.toString().equalsIgnoreCase("LEFT"))
             return Component.literal("Left (PvPTiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cyclePvPTiersMode());
 
-//        if (positionSubtiers.toString().equalsIgnoreCase("LEFT"))
-//            return Component.literal("Left (Subtiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleSubtiersMode());
+        if (positionSubtiers.toString().equalsIgnoreCase("LEFT"))
+            return Component.literal("Left (Subtiers) is now displaying ").setStyle(Style.EMPTY.withColor(CommonColors.WHITE)).append(cycleSubtiersMode());
 
         return null;
     }
 
     public static Component getRightIcon() {
-//        if (positionMCTiers.toString().equalsIgnoreCase("RIGHT"))
-//            return activeMCTiersMode.getIcon();
+        if (positionMCTiers.toString().equalsIgnoreCase("RIGHT"))
+            return activeMCTiersMode.getIcon();
 
         if (positionPvPTiers.toString().equalsIgnoreCase("RIGHT"))
             return activePvPTiersMode.getIcon();
 
-//        if (positionSubtiers.toString().equalsIgnoreCase("RIGHT"))
-//            return activeSubtiersMode.getIcon();
+        if (positionSubtiers.toString().equalsIgnoreCase("RIGHT"))
+            return activeSubtiersMode.getIcon();
 
         return Component.empty();
     }
 
     public static Component getLeftIcon() {
-//        if (positionMCTiers.toString().equalsIgnoreCase("LEFT"))
-//            return activeMCTiersMode.getIcon();
+        if (positionMCTiers.toString().equalsIgnoreCase("LEFT"))
+            return activeMCTiersMode.getIcon();
 
         if (positionPvPTiers.toString().equalsIgnoreCase("LEFT"))
             return activePvPTiersMode.getIcon();
 
-//        if (positionSubtiers.toString().equalsIgnoreCase("LEFT"))
-//            return activeSubtiersMode.getIcon();
+        if (positionSubtiers.toString().equalsIgnoreCase("LEFT"))
+            return activeSubtiersMode.getIcon();
 
         return Component.empty();
     }
@@ -298,6 +302,16 @@ public class TiersClient implements ClientModInitializer {
 
     public static void toggleMod() {
         toggleMod = !toggleMod;
+        ConfigManager.saveConfig();
+    }
+
+    public static void toggleRegion() {
+        toggleRegion = !toggleRegion;
+        ConfigManager.saveConfig();
+    }
+
+    public static void togglePeak() {
+        togglePeak = !togglePeak;
         ConfigManager.saveConfig();
     }
 
@@ -326,11 +340,18 @@ public class TiersClient implements ClientModInitializer {
         ConfigManager.saveConfig();
     }
 
+    public static void resetSettings() {
+        ConfigManager.resetToDefaults();
+        TiersClient.changeIcons(TiersClient.activeIcons, true);
+    }
+
     public static void tiersCommand(String playerName) {
         if (playerName.equalsIgnoreCase("-toggle"))
             toggleMod(null);
         else if (playerName.equalsIgnoreCase("-config"))
             setScreen(ConfigScreen.getConfigScreen(null));
+        else if (playerName.equalsIgnoreCase("-reset"))
+            resetSettings();
         else if (playerName.equalsIgnoreCase("-help") || playerName.equalsIgnoreCase("-debug")) {
             sendMessageToPlayer(Icons.colorText("", CommonColors.WHITE), false);
             sendMessageToPlayer(Icons.colorText("--- Tiers help ---", CommonColors.YELLOW), false);
@@ -371,13 +392,13 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("", CommonColors.WHITE), false);
             sendMessageToPlayer(Icons.colorText("Player profiles status:", "green"), false);
             sendMessageToPlayer(Icons.colorText("Cached players: " + PlayerProfile.playerProfilesRequests.get() + " (" + PlayerProfile.failedPlayerProfilesRequests.get() + " failed)", CommonColors.WHITE), false);
-//            sendMessageToPlayer(Icons.colorText("MCTiers requests failed: " + SuperProfile.failedMCTiersRequests + "/" + SuperProfile.MCTiersRequests + " (failed / requested)", CommonColors.YELLOW), false);
+            sendMessageToPlayer(Icons.colorText("MCTiers requests failed: " + SuperProfile.failedMCTiersRequests + "/" + SuperProfile.MCTiersRequests + " (failed / requested)", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("PvPTiers requests failed: " + SuperProfile.failedPvPTiersRequests + "/" + SuperProfile.PvPTiersRequests + " (failed / requested)", CommonColors.YELLOW), false);
-//            sendMessageToPlayer(Icons.colorText("Subtiers requests failed: " + SuperProfile.failedSubtiersRequests + "/" + SuperProfile.SubtiersRequests + " (failed / requested)", CommonColors.YELLOW), false);
+            sendMessageToPlayer(Icons.colorText("Subtiers requests failed: " + SuperProfile.failedSubtiersRequests + "/" + SuperProfile.SubtiersRequests + " (failed / requested)", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("", CommonColors.WHITE), false);
-//            sendMessageToPlayer(Icons.colorText("MCTiers status | is down? " + SuperProfile.isMCTiersDown + " | Failed request in last minute: " + SuperProfile.failedMCTiersRequestsLastMinute, CommonColors.YELLOW), false);
+            sendMessageToPlayer(Icons.colorText("MCTiers status | is down? " + SuperProfile.isMCTiersDown + " | Failed request in last minute: " + SuperProfile.failedMCTiersRequestsLastMinute, CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("PvPTiers status | is down? " + SuperProfile.isPvPTiersDown + " | Failed request in last minute: " + SuperProfile.failedPvPTiersRequestsLastMinute, CommonColors.YELLOW), false);
-//            sendMessageToPlayer(Icons.colorText("Subtiers status | is down? " + SuperProfile.isSubtiersDown + " | Failed request in last minute: " + SuperProfile.failedSubtiersRequestsLastMinute, CommonColors.YELLOW), false);
+            sendMessageToPlayer(Icons.colorText("Subtiers status | is down? " + SuperProfile.isSubtiersDown + " | Failed request in last minute: " + SuperProfile.failedSubtiersRequestsLastMinute, CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("Tiers will try to recover all failed requests once the services come back up", CommonColors.WHITE), false);
             sendMessageToPlayer(Icons.colorText("", CommonColors.WHITE), false);
         } else if (playerName.startsWith("-")) {
@@ -387,6 +408,7 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("/tiers -config", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("/tiers -help | /tiers -debug", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("/tiers -clear", CommonColors.YELLOW), false);
+            sendMessageToPlayer(Icons.colorText("/tiers -reset", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("/tiers -status", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("", CommonColors.WHITE), false);
         } else {
@@ -397,7 +419,7 @@ public class TiersClient implements ClientModInitializer {
     }
 
     public static void setScreen(Screen screen) {
-        Minecraft.getInstance().executeIfPossible(() -> Minecraft.getInstance().setScreen(screen));
+        Minecraft.getInstance().executeIfPossible(() -> Minecraft.getInstance().setScreenAndShow(screen));
     }
 
     public static String[] getDebugInfo() {
@@ -416,17 +438,19 @@ public class TiersClient implements ClientModInitializer {
         debugInfo[1] = debugInfo[0];
         debugInfo[1] += "Launcher brand: " + Minecraft.getLauncherBrand() + "\n";
         debugInfo[1] += "Game version: " + Minecraft.getInstance().getLaunchedVersion() + " | " + FabricLoader.getInstance().getRawGameVersion() + "\n";
-        debugInfo[1] += "Version type: " + Minecraft.getInstance().getVersionType() + "\n";
+        debugInfo[1] += "Version type: " + SharedConstants.getCurrentVersion().name() + "\n";
         debugInfo[1] += "Instance name: " + Minecraft.getInstance().name() + "\n";
         debugInfo[1] += "Game profile name: " + Minecraft.getInstance().getGameProfile().name() + "\n";
         debugInfo[1] += "OS info:\n\t" + System.getProperty("os.name") + "\n\t" + System.getProperty("os.version") + "\n\t" + System.getProperty("os.arch") + "\n";
-        debugInfo[1] += "CPU info: " + GLX._getCpuInfo() + "\n";
+        CentralProcessor processor = (new SystemInfo()).getHardware().getProcessor();
+        String cpuInfo = String.format(Locale.ROOT, "%dx %s", processor.getLogicalProcessorCount(), processor.getProcessorIdentifier().getName()).replaceAll("\\s+", " ");
+        debugInfo[1] += "CPU info: " + cpuInfo + "\n";
         Runtime runtime = Runtime.getRuntime();
         debugInfo[1] += "RAM info (MB):\n\tMax: " + runtime.maxMemory() / (1024 * 1024) + "\n\tTotal: " + runtime.totalMemory() / (1024 * 1024) + "\n\tFree: " + runtime.freeMemory() / (1024 * 1024) + "\n\tIn use: " + (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024) + "\n";
         GpuDevice gpuDevice = RenderSystem.getDevice();
         debugInfo[1] += "GPU info:\n\t" + gpuDevice.getBackendName() + "\n\t" + gpuDevice.getImplementationInformation() + "\n\t" + gpuDevice.getRenderer() + "\n\t" + gpuDevice.getVersion() + "\n";
         debugInfo[1] += "Java version: " + System.getProperty("java.version") + "\n";
-        debugInfo[1] += "Launch args: " + Arrays.toString(FabricLoader.getInstance().getLaunchArguments(false)) + "\n";
+        debugInfo[1] += "Launch args: " + Arrays.toString(FabricLoader.getInstance().getLaunchArguments(true)) + "\n";
         debugInfo[1] += "All Fabric mods: " + FabricLoader.getInstance().getAllMods() + "\n";
         debugInfo[1] += "Resource packs: " + Minecraft.getInstance().getResourceManager().listPacks().map(PackResources::packId).collect(Collectors.joining(", ")) + "\n";
 
@@ -492,11 +516,11 @@ public class TiersClient implements ClientModInitializer {
                 ((DataTrackerAccessor) textDisplay.getEntityData()).invokeSet(TextDisplayAccessor.getTEXT(), textDisplay.getText(), true);
     }
 
-//    public static Component cycleMCTiersMode() {
-//        activeMCTiersMode = cycleEnum(activeMCTiersMode, Mode.getMCTiersValues());
-//        ConfigManager.saveConfig();
-//        return activeMCTiersMode.getTextLabel();
-//    }
+    public static Component cycleMCTiersMode() {
+        activeMCTiersMode = cycleEnum(activeMCTiersMode, Mode.getMCTiersValues());
+        ConfigManager.saveConfig();
+        return activeMCTiersMode.getTextLabel();
+    }
 
     public static Component cyclePvPTiersMode() {
         activePvPTiersMode = cycleEnum(activePvPTiersMode, Mode.getPvPTiersValues());
@@ -504,11 +528,11 @@ public class TiersClient implements ClientModInitializer {
         return activePvPTiersMode.getTextLabel();
     }
 
-//    public static Component cycleSubtiersMode() {
-//        activeSubtiersMode = cycleEnum(activeSubtiersMode, Mode.getSubtiersValues());
-//        ConfigManager.saveConfig();
-//        return activeSubtiersMode.getTextLabel();
-//    }
+    public static Component cycleSubtiersMode() {
+        activeSubtiersMode = cycleEnum(activeSubtiersMode, Mode.getSubtiersValues());
+        ConfigManager.saveConfig();
+        return activeSubtiersMode.getTextLabel();
+    }
 
     public static void cycleDisplayMode() {
         displayMode = cycleEnum(displayMode, ModesTierDisplay.values());
