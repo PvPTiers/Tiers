@@ -29,7 +29,7 @@ public abstract class ModifyTabClientMixin {
     @Inject(at = @At(value = "TAIL"), method = "<init>")
     private void onConstruct(GameProfile profile, boolean enforcesSecureChat, CallbackInfo ci) {
         if (TiersClient.toggleMod)
-            TiersClient.addGetPlayer(profile.name(), false);
+            TiersClient.addGetPlayer(profile.name(), false, profile.id());
     }
 
     @ModifyReturnValue(at = @At("RETURN"), method = "getTabListDisplayName")
@@ -42,6 +42,6 @@ public abstract class ModifyTabClientMixin {
         tiers_cacheVersion = TiersClient.cacheVersion;
         tiers_lastOriginal = original;
 
-        return tiers_cached = TiersClient.addGetPlayer(getProfile().name(), false).deepReplace(original);
+        return tiers_cached = TiersClient.addGetPlayer(getProfile().name(), false, getProfile().id()).deepReplace(original);
     }
 }
