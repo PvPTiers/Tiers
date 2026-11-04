@@ -75,7 +75,7 @@ public class GameMode {
             displayedPeakTierUnformatted = peakPos.equalsIgnoreCase("0") ? "HT" : "LT";
             displayedPeakTierUnformatted += peakTier;
 
-            displayedPeakTier = Component.literal("(" + displayedPeakTierUnformatted + ")").setStyle(Style.EMPTY.withColor(getTierColor(displayedPeakTierUnformatted)));
+            displayedPeakTier = Component.literal(displayedPeakTierUnformatted).setStyle(Style.EMPTY.withColor(getTierColor(displayedPeakTierUnformatted)));
             peakTierTooltip = getPeakTierTooltip();
 
             hasPeak = true;
