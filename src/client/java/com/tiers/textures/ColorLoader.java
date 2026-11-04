@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-import static com.tiers.TiersClient.LOGGER;
-
 public class ColorLoader implements PreparableReloadListener {
     public static Identifier identifier = Identifier.fromNamespaceAndPath("minecraft", "colors/pvptiers.json");
 
@@ -34,7 +32,7 @@ public class ColorLoader implements PreparableReloadListener {
                 TiersClient.restyleAllTexts(TiersClient.playerProfiles);
                 TiersClient.updateAllTags();
             } catch (IOException ignored) {
-                LOGGER.warn("Error loading colors info");
+                TiersClient.LOGGER.warn("Error loading colors info");
             }
         }
 
@@ -79,7 +77,7 @@ public class ColorLoader implements PreparableReloadListener {
                 }
             }
         } catch (IOException ignored) {
-            LOGGER.warn("Error loading default jsons");
+            TiersClient.LOGGER.warn("Error loading default jsons");
         }
 
         return "";

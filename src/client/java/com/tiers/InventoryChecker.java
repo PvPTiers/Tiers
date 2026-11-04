@@ -22,127 +22,122 @@ public class InventoryChecker {
             return;
         }
 
-//        Mode oldActiveMCTiersMode = TiersClient.activeMCTiersMode;
+        Mode oldActiveMCTiersMode = TiersClient.activeMCTiersMode;
         Mode oldActivePvPTiersMode = TiersClient.activePvPTiersMode;
-//        Mode oldActiveSubtiersMode = TiersClient.activeSubtiersMode;
+        Mode oldActiveSubtiersMode = TiersClient.activeSubtiersMode;
         Mode detected = null;
 
         Inventory inventory = minecraft.player.getInventory();
 
         if (checkVanilla(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_VANILLA;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_VANILLA;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_CRYSTAL;
             detected = Mode.MCTIERS_VANILLA;
         }
 
         if (checkSword(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_SWORD;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_SWORD;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_SWORD;
             detected = Mode.MCTIERS_SWORD;
         }
 
         if (checkUhc(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_UHC;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_UHC;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_UHC;
             detected = Mode.MCTIERS_UHC;
         }
 
         if (checkPot(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_POT;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_POT;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_POT;
             detected = Mode.MCTIERS_POT;
         }
 
         if (checkNethPot(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_NETH_OP;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_NETH_OP;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_NETH_POT;
             detected = Mode.MCTIERS_NETH_OP;
         }
 
         if (checkSmp(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_SMP;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_SMP;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_SMP;
             detected = Mode.MCTIERS_SMP;
         }
 
         if (checkAxe(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_AXE;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_AXE;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_AXE;
             detected = Mode.MCTIERS_AXE;
         }
 
         if (checkMace(inventory)) {
-//            TiersClient.activeMCTiersMode = Mode.MCTIERS_MACE;
+            TiersClient.activeMCTiersMode = Mode.MCTIERS_MACE;
             TiersClient.activePvPTiersMode = Mode.PVPTIERS_MACE;
             detected = Mode.MCTIERS_MACE;
         }
 
-//        if (checkMinecart(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_MINECART;
-//            detected = Mode.SUBTIERS_MINECART;
-//        }
-//
-//        if (checkDiamondVanilla(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_DIAMOND_VANILLA;
-//            detected = Mode.SUBTIERS_DIAMOND_VANILLA;
-//        }
-//
-//        if (checkDeBuff(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_DEBUFF;
-//            detected = Mode.SUBTIERS_DEBUFF;
-//        }
-//
-//        if (checkSubtiersElytra(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_ELYTRA;
-//            detected = Mode.SUBTIERS_ELYTRA;
-//        }
-//
-//        if (checkSpeed(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_SPEED;
-//            detected = Mode.SUBTIERS_SPEED;
-//        }
-//
-//        if (checkCreeper(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_CREEPER;
-//            detected = Mode.SUBTIERS_CREEPER;
-//        }
-//
-//        if (checkManhunt(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_MANHUNT;
-//            detected = Mode.SUBTIERS_MANHUNT;
-//        }
-//
-//        if (checkDiamondSmp(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_DIAMOND_SMP;
-//            detected = Mode.SUBTIERS_DIAMOND_SMP;
-//        }
-//
-//        if (checkBow(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_BOW;
-//            detected = Mode.SUBTIERS_BOW;
-//        }
-//
-//        if (checkBed(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_BED;
-//            detected = Mode.SUBTIERS_BED;
-//        }
-//
-//        if (checkOgVanilla(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_OG_VANILLA;
-//            detected = Mode.SUBTIERS_OG_VANILLA;
-//        }
-//
-//        if (checkTrident(inventory)) {
-//            TiersClient.activeSubtiersMode = Mode.SUBTIERS_TRIDENT;
-//            detected = Mode.SUBTIERS_TRIDENT;
-//        }
+        if (checkMinecart(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_MINECART;
+            detected = Mode.SUBTIERS_MINECART;
+        }
 
-//        if ((oldActiveMCTiersMode != TiersClient.activeMCTiersMode || oldActivePvPTiersMode != TiersClient.activePvPTiersMode || oldActiveSubtiersMode != TiersClient.activeSubtiersMode) && detected != null) {
-//            ConfigManager.saveConfig();
-//            TiersClient.sendMessageToPlayer(Component.empty().append(detected.getTextLabel()).append(Component.literal(" was detected")), true);
-//        } else if (showMessage)
-//            TiersClient.sendMessageToPlayer(Icons.colorText("No gamemode detected", "red"), true);
-        if (oldActivePvPTiersMode != TiersClient.activePvPTiersMode && detected != null) {
+        if (checkDiamondVanilla(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_DIAMOND_VANILLA;
+            detected = Mode.SUBTIERS_DIAMOND_VANILLA;
+        }
+
+        if (checkDeBuff(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_DEBUFF;
+            detected = Mode.SUBTIERS_DEBUFF;
+        }
+
+        if (checkSubtiersElytra(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_ELYTRA;
+            detected = Mode.SUBTIERS_ELYTRA;
+        }
+
+        if (checkSpeed(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_SPEED;
+            detected = Mode.SUBTIERS_SPEED;
+        }
+
+        if (checkCreeper(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_CREEPER;
+            detected = Mode.SUBTIERS_CREEPER;
+        }
+
+        if (checkManhunt(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_MANHUNT;
+            detected = Mode.SUBTIERS_MANHUNT;
+        }
+
+        if (checkDiamondSmp(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_DIAMOND_SMP;
+            detected = Mode.SUBTIERS_DIAMOND_SMP;
+        }
+
+        if (checkBow(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_BOW;
+            detected = Mode.SUBTIERS_BOW;
+        }
+
+        if (checkBed(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_BED;
+            detected = Mode.SUBTIERS_BED;
+        }
+
+        if (checkOgVanilla(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_OG_VANILLA;
+            detected = Mode.SUBTIERS_OG_VANILLA;
+        }
+
+        if (checkTrident(inventory)) {
+            TiersClient.activeSubtiersMode = Mode.SUBTIERS_TRIDENT;
+            detected = Mode.SUBTIERS_TRIDENT;
+        }
+
+        if ((oldActiveMCTiersMode != TiersClient.activeMCTiersMode || oldActivePvPTiersMode != TiersClient.activePvPTiersMode || oldActiveSubtiersMode != TiersClient.activeSubtiersMode) && detected != null) {
             ConfigManager.saveConfig();
             TiersClient.sendMessageToPlayer(Component.empty().append(Component.literal("Now displaying: ")).append(detected.getTextLabel()), true);
         } else if (showMessage) {
