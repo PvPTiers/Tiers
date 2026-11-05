@@ -4,7 +4,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.tiers.TiersClient;
 import com.tiers.misc.Mode;
+import com.tiers.profile.types.MCTiersProfile;
 import com.tiers.profile.types.PvPTiersProfile;
+import com.tiers.profile.types.SubtiersProfile;
 import com.tiers.profile.types.SuperProfile;
 import com.tiers.screens.ConfigScreen;
 import com.tiers.textures.ColorControl;
@@ -39,6 +41,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.tiers.TiersClient.*;
+import static com.tiers.TiersClient.togglePeak;
+import static com.tiers.TiersClient.toggleRegion;
 
 public class PlayerProfile {
     public static final CopyOnWriteArrayList<PlayerProfile> failedPlayerProfiles = new CopyOnWriteArrayList<>();
@@ -54,7 +58,9 @@ public class PlayerProfile {
     public String name = "";
     public String uuid = "";
 
+    public MCTiersProfile profileMCTiers;
     public PvPTiersProfile profilePvPTiers;
+    public SubtiersProfile profileSubtiers;
 
     public Text toAppendLeft = Text.empty();
     public Text toAppendRight = Text.empty();
@@ -87,7 +93,7 @@ public class PlayerProfile {
         status = !name.matches("^[a-zA-Z0-9_]{3,16}$") ? Status.NOT_PLAYER : Status.SEARCHING;
     }
 
-    public PlayerProfile(String mojangJson, String jsonPvPTiers) {
+    public PlayerProfile(String mojangJson, String jsonMCTiers, String jsonPvPTiers, String jsonSubtiers) {
         regular = false;
 
         if (JsonParser.parseString(mojangJson).isJsonNull()) {
@@ -118,7 +124,9 @@ public class PlayerProfile {
             LOGGER.warn("Error copying default skin");
         }
 
+        profileMCTiers = new MCTiersProfile(jsonMCTiers);
         profilePvPTiers = new PvPTiersProfile(jsonPvPTiers);
+        profileSubtiers = new SubtiersProfile(jsonSubtiers);
 
         status = Status.READY;
     }
@@ -321,10 +329,16 @@ public class PlayerProfile {
             if (mode != 0)
                 TiersClient.showUpdatedPlayerProfile(this, false);
 
+            if (mode == 0 || mode == 1)
+                profileMCTiers = new MCTiersProfile("https://mctiers.net/api/v2/profile/", uuid, extra);
             if (mode == 0 || mode == 2)
                 profilePvPTiers = new PvPTiersProfile("https://pvptiers.com/api/profile/", uuid, extra);
+            if (mode == 0 || mode == 3)
+                profileSubtiers = new SubtiersProfile("https://subtiers.net/api/profile/", uuid, extra);
 
+            profileMCTiers.setOnUpdate(this::updateAppendingText);
             profilePvPTiers.setOnUpdate(this::updateAppendingText);
+            profileSubtiers.setOnUpdate(this::updateAppendingText);
         });
     }
 
@@ -332,10 +346,20 @@ public class PlayerProfile {
         toAppendRight = Text.empty();
         toAppendLeft = Text.empty();
 
+        if (positionMCTiers == DisplayStatus.RIGHT)
+            toAppendRight = updateProfileNameRight(profileMCTiers, activeMCTiersMode);
+        else if (positionMCTiers == DisplayStatus.LEFT)
+            toAppendLeft = updateProfileNameLeft(profileMCTiers, activeMCTiersMode);
+
         if (positionPvPTiers == DisplayStatus.RIGHT)
             toAppendRight = updateProfileNameRight(profilePvPTiers, activePvPTiersMode);
         else if (positionPvPTiers == DisplayStatus.LEFT)
             toAppendLeft = updateProfileNameLeft(profilePvPTiers, activePvPTiersMode);
+
+        if (positionSubtiers == DisplayStatus.RIGHT)
+            toAppendRight = updateProfileNameRight(profileSubtiers, activeSubtiersMode);
+        else if (positionSubtiers == DisplayStatus.LEFT)
+            toAppendLeft = updateProfileNameLeft(profileSubtiers, activeSubtiersMode);
 
         cachesDirty = true;
     }
@@ -365,63 +389,91 @@ public class PlayerProfile {
     private Text updateProfileNameRight(SuperProfile superProfile, Mode activeMode) {
         MutableText returnValue = Text.empty();
 
-        if (superProfile != null && superProfile.status == Status.READY) {
-            GameMode shown = superProfile.getGameMode(activeMode);
+        if (superProfile == null || superProfile.status != Status.READY)
+            return returnValue;
 
-            if ((shown == null || shown.status == Status.SEARCHING) || (shown.status == Status.NOT_EXISTING && displayMode == ModesTierDisplay.SELECTED))
-                return returnValue;
+        GameMode shown = superProfile.getGameMode(activeMode);
 
-            if (displayMode == ModesTierDisplay.ADAPTIVE_HIGHEST && shown.status == Status.NOT_EXISTING && superProfile.highest != null)
-                shown = superProfile.highest;
+        if ((shown == null || shown.status == Status.SEARCHING) || (shown.status == Status.NOT_EXISTING && displayMode == ModesTierDisplay.SELECTED))
+            return returnValue;
 
-            if (displayMode == ModesTierDisplay.HIGHEST && superProfile.highest != null && superProfile.highest.getTierPoints(false) > shown.getTierPoints(false))
-                shown = superProfile.highest;
+        if (displayMode == ModesTierDisplay.ADAPTIVE_HIGHEST && shown.status == Status.NOT_EXISTING && superProfile.highest != null)
+            shown = superProfile.highest;
 
-            if (shown == null || shown.status != Status.READY)
-                return returnValue;
+        if (displayMode == ModesTierDisplay.HIGHEST && superProfile.highest != null && superProfile.highest.getTierPoints(false) > shown.getTierPoints(false))
+            shown = superProfile.highest;
 
-            MutableText separator = Text.literal(" | ").setStyle(toggleAdaptiveSeparator ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
-            returnValue.append(Text.empty().append(separator).append(shown.displayedTier));
+        if (shown == null || shown.status != Status.READY)
+            return returnValue;
 
-            if (toggleIcons)
-                returnValue.append(Text.literal(" ").append(shown.gamemode.getIconTag()));
-        }
+        MutableText separator = Text.literal(" | ").setStyle(toggleAdaptiveSeparator ? (TiersClient.toggleRegion ? superProfile.displayedRegion.getStyle() : ((togglePeak && shown.hasPeak) ? shown.displayedPeakTier.getStyle() : shown.displayedTier.getStyle())) : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
+        returnValue.append(Text.empty().append(separator));
+
+        if (toggleRegion)
+            returnValue.append(superProfile.displayedRegion).append(Text.literal(" "));
+
+        if (togglePeak && shown.hasPeak)
+            returnValue.append(Text.empty().append(Text.literal("^").setStyle(shown.displayedPeakTier.getStyle())).append(shown.displayedPeakTier));
+        else
+            returnValue.append(Text.empty().append(shown.displayedTier));
+
+        if (toggleIcons)
+            returnValue.append(Text.literal(" ").append(shown.gamemode.getIconTag()));
+
         return returnValue;
     }
 
     private Text updateProfileNameLeft(SuperProfile superProfile, Mode activeMode) {
         MutableText returnValue = Text.empty();
 
-        if (superProfile != null && superProfile.status == Status.READY) {
-            GameMode shown = superProfile.getGameMode(activeMode);
+        if (superProfile == null || superProfile.status != Status.READY)
+            return returnValue;
 
-            if ((shown == null || shown.status == Status.SEARCHING) || (shown.status == Status.NOT_EXISTING && displayMode == ModesTierDisplay.SELECTED))
-                return returnValue;
+        GameMode shown = superProfile.getGameMode(activeMode);
 
-            if (displayMode == ModesTierDisplay.ADAPTIVE_HIGHEST && shown.status == Status.NOT_EXISTING && superProfile.highest != null)
-                shown = superProfile.highest;
+        if ((shown == null || shown.status == Status.SEARCHING) || (shown.status == Status.NOT_EXISTING && displayMode == ModesTierDisplay.SELECTED))
+            return returnValue;
 
-            if (displayMode == ModesTierDisplay.HIGHEST && superProfile.highest != null && superProfile.highest.getTierPoints(false) > shown.getTierPoints(false))
-                shown = superProfile.highest;
+        if (displayMode == ModesTierDisplay.ADAPTIVE_HIGHEST && shown.status == Status.NOT_EXISTING && superProfile.highest != null)
+            shown = superProfile.highest;
 
-            if (shown == null || shown.status != Status.READY)
-                return returnValue;
+        if (displayMode == ModesTierDisplay.HIGHEST && superProfile.highest != null && superProfile.highest.getTierPoints(false) > shown.getTierPoints(false))
+            shown = superProfile.highest;
 
-            MutableText separator = Text.literal(" | ").setStyle(toggleAdaptiveSeparator ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
+        if (shown == null || shown.status != Status.READY)
+            return returnValue;
 
-            if (toggleIcons)
-                returnValue = Text.empty().append(shown.gamemode.getIconTag()).append(" ");
-            returnValue.append(Text.empty().append(shown.displayedTier).append(separator));
-        }
+        MutableText separator = Text.literal(" | ").setStyle(toggleAdaptiveSeparator ? (TiersClient.toggleRegion ? superProfile.displayedRegion.getStyle() : ((togglePeak && shown.hasPeak) ? shown.displayedPeakTier.getStyle() : shown.displayedTier.getStyle())) : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
+
+        if (toggleIcons)
+            returnValue = Text.empty().append(shown.gamemode.getIconTag()).append(" ");
+
+        if (togglePeak && shown.hasPeak)
+            returnValue.append(Text.empty().append(shown.displayedPeakTier)).append(Text.literal("^").setStyle(shown.displayedPeakTier.getStyle()));
+        else
+            returnValue.append(Text.empty().append(shown.displayedTier));
+
+        if (toggleRegion)
+            returnValue.append(Text.literal(" ").append(superProfile.displayedRegion));
+
+        returnValue.append(Text.empty().append(separator));
+
         return returnValue;
     }
 
     public void resetDrawnStatus() {
-        if (profilePvPTiers == null)
+        if (profileMCTiers == null || profilePvPTiers == null || profileSubtiers == null)
             return;
+
+        profileMCTiers.apiErrorShown = false;
         profilePvPTiers.apiErrorShown = false;
+        profileSubtiers.apiErrorShown = false;
+        profileMCTiers.drawn = false;
         profilePvPTiers.drawn = false;
+        profileSubtiers.drawn = false;
+        profileMCTiers.gameModes.forEach(gameMode -> gameMode.drawn = false);
         profilePvPTiers.gameModes.forEach(gameMode -> gameMode.drawn = false);
+        profileSubtiers.gameModes.forEach(gameMode -> gameMode.drawn = false);
     }
 
     public boolean isPlayerValid() {
@@ -559,7 +611,9 @@ public class PlayerProfile {
                 "\ndeepReplaceName=" + (deepReplaceName != null ? deepReplaceName.getString() : "null") +
                 "\nnumberOfRequests=" + numberOfRequests +
                 "\nregular=" + regular +
+                "\n\nprofileMCTiers=" + (profileMCTiers != null ? profileMCTiers : "null") +
                 "\n\nprofilePvPTiers=" + (profilePvPTiers != null ? profilePvPTiers : "null") +
+                "\n\nprofileSubtiers=" + (profileSubtiers != null ? profileSubtiers : "null") +
                 "}\n\n\n--- NEXT ---\n\n\n";
     }
 }
