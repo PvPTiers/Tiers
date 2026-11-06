@@ -41,7 +41,7 @@
       "tier": 3,
       "pos": 1,
       "peak_tier": 3,
-      "peak_pos": 1,
+      "peak_pos": 0,
       "attained": 1697426792,
       "retired": false
     },
@@ -49,9 +49,9 @@
       "tier": 2,
       "pos": 1,
       "peak_tier": 2,
-      "peak_pos": 1,
+      "peak_pos": 0,
       "attained": 1750652866,
-      "retired": true
+      "retired": false
     },
     "sword": {
       "tier": 2,

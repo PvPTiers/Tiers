@@ -19,8 +19,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
-import static com.tiers.TiersClient.LOGGER;
-
 public class ColorLoader implements SimpleSynchronousResourceReloadListener {
     public static Identifier identifier = Identifier.of("minecraft", "colors/pvptiers.json");
 
@@ -36,7 +34,7 @@ public class ColorLoader implements SimpleSynchronousResourceReloadListener {
                 TiersClient.restyleAllTexts(TiersClient.playerProfiles);
                 TiersClient.updateAllTags();
             } catch (IOException ignored) {
-                LOGGER.warn("Error loading colors info");
+                TiersClient.LOGGER.warn("Error loading colors info");
             }
         }
 
@@ -45,9 +43,11 @@ public class ColorLoader implements SimpleSynchronousResourceReloadListener {
             PlayerProfileQueue.putFirstInQueue(ConfigScreen.ownProfile);
 
             String defaultProfileMojang = loadStringFromResources("json/defaultProfileMojang.json");
+            String defaultProfileMCTiers = loadStringFromResources("json/defaultProfileMCTiers.json");
             String defaultProfilePvPTiers = loadStringFromResources("json/defaultProfilePvPTiers.json");
+            String defaultProfileSubtiers = loadStringFromResources("json/defaultProfileSubtiers.json");
 
-            ConfigScreen.defaultProfile = new PlayerProfile(defaultProfileMojang, defaultProfilePvPTiers);
+            ConfigScreen.defaultProfile = new PlayerProfile(defaultProfileMojang, defaultProfileMCTiers, defaultProfilePvPTiers, defaultProfileSubtiers);
 
         } else {
             ArrayList<PlayerProfile> configProfiles = new ArrayList<>();
@@ -72,7 +72,7 @@ public class ColorLoader implements SimpleSynchronousResourceReloadListener {
                 }
             }
         } catch (IOException ignored) {
-            LOGGER.warn("Error loading default jsons");
+            TiersClient.LOGGER.warn("Error loading colors info");
         }
 
         return "";
