@@ -76,6 +76,48 @@
       "height": 15,
       "ascent": 11,
       "chars": ["\uF00B"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/region.png",
+      "height": 15,
+      "ascent": 11,
+      "chars": ["\uF00C"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/region_disabled.png",
+      "height": 15,
+      "ascent": 11,
+      "chars": ["\uF00D"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/peak.png",
+      "height": 14,
+      "ascent": 10,
+      "chars": ["\uF00E"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/peak_disabled.png",
+      "height": 14,
+      "ascent": 10,
+      "chars": ["\uF00F"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/lever_on.png",
+      "height": 16,
+      "ascent": 12,
+      "chars": ["\uF011"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/lever_off.png",
+      "height": 16,
+      "ascent": 12,
+      "chars": ["\uF012"]
     }
   ]
 }
