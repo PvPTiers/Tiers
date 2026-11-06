@@ -10,10 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 public class PlayerProfileQueue {
     private static final ConcurrentLinkedDeque<PlayerProfile> queue = new ConcurrentLinkedDeque<>();
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r, "tiers-profile-queue");
-        t.setDaemon(true);
-        return t;
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "tiers-profile-queue");
+        thread.setDaemon(true);
+        return thread;
     });
 
     private static PlayerProfile currentProfile = null;
