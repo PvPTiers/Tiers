@@ -14,14 +14,15 @@ import com.tiers.textures.Icons;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.ExternalTextureProvider;
+import net.minecraft.client.renderer.texture.TextureResources;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.CommonColors;
@@ -52,7 +53,7 @@ public class PlayerSearchResultScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics) {
         if (!playerProfile.isPlayerValid()) {
             onClose();
             return;
@@ -72,9 +73,9 @@ public class PlayerSearchResultScreen extends Screen {
         int thirdListX = (int) (centerX + width / 3.5) + 25;
         int avatarY = height / 55 + 12;
 
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+        super.extractRenderState(graphics);
 
-        dimensionsWarning.visible = small;
+        dimensionsWarning.setVisible(small);
         if (tooSmall) {
             dimensionsWarning.setMessage(Component.literal("⚠"));
             dimensionsWarning.setTooltip(Tooltip.create(Component.literal("Your window dimensions (" + width + "x" + height + ") are too small\nLower the GUI scale or make the window bigger! (min: 430x262)")));
@@ -106,11 +107,11 @@ public class PlayerSearchResultScreen extends Screen {
         }
 
         if (image == MCTiersProfile.MCTIERS_IMAGE)
-            graphics.blit(RenderPipelines.GUI_TEXTURED, image, x - 64, (int) (y + 2.4 * separator) + 4 - 38, 0, 0, 128, 24, 128, 24);
+            graphics.blit(GuiPipeline.TEXTURED, image, x - 64, (int) (y + 2.4 * separator) + 4 - 38, 0, 0, 128, 24, 128, 24);
         else if (image == PvPTiersProfile.PVPTIERS_IMAGE)
-            graphics.blit(RenderPipelines.GUI_TEXTURED, image, x - 12, (int) (y + 2.4 * separator) + 4 - 38, 0, 0, 24, 24, 24, 24);
+            graphics.blit(GuiPipeline.TEXTURED, image, x - 12, (int) (y + 2.4 * separator) + 4 - 38, 0, 0, 24, 24, 24, 24);
         else if (image == SubtiersProfile.SUBTIERS_IMAGE)
-            graphics.blit(RenderPipelines.GUI_TEXTURED, image, (int) (x - 15.5), (int) (y + 2.4 * separator) - 38, 0, 0, 31, 31, 31, 31);
+            graphics.blit(GuiPipeline.TEXTURED, image, (int) (x - 15.5), (int) (y + 2.4 * separator) - 38, 0, 0, 31, 31, 31, 31);
 
         if (superProfile.status == Status.SEARCHING) {
             graphics.centeredText(font, "Searching...", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("green"));
@@ -244,9 +245,9 @@ public class PlayerSearchResultScreen extends Screen {
     private void drawPlayerAvatar(GuiGraphicsExtractor graphics, int x, int y) {
         if (imageReady) {
             if (playerProfile.imageSaved == 1 || playerProfile.imageSaved == 2)
-                graphics.blit(RenderPipelines.GUI_TEXTURED, playerAvatarTexture, x - width / 32, y, 0, 0, width / 16, (int) (width / 6.666), width / 16, (int) (width / 6.666));
+                graphics.blit(GuiPipeline.TEXTURED, playerAvatarTexture, x - width / 32, y, 0, 0, width / 16, (int) (width / 6.666), width / 16, (int) (width / 6.666));
             else if (playerProfile.imageSaved < 6 && playerProfile.imageSaved > 2)
-                graphics.blit(RenderPipelines.GUI_TEXTURED, playerAvatarTexture, (int) (x - width / 22.5), y, 0, 0, (int) (width / 11.25), (int) (width / 6.666), (int) (width / 11.25), (int) (width / 6.666));
+                graphics.blit(GuiPipeline.TEXTURED, playerAvatarTexture, (int) (x - width / 22.5), y, 0, 0, (int) (width / 11.25), (int) (width / 6.666), (int) (width / 11.25), (int) (width / 6.666));
         } else if (playerProfile.imageSaved != 0) {
             loadPlayerAvatar();
         } else if (playerProfile.numberOfImageRequests >= 6)
@@ -257,8 +258,8 @@ public class PlayerSearchResultScreen extends Screen {
         if (imageReady || imageError)
             return;
 
-        try (FileInputStream fileInputStream = new FileInputStream(FabricLoader.getInstance().getGameDir().resolve("cache/tiers/players/" + playerProfile.uuid + ".png").toFile())) {
-            Minecraft.getInstance().getTextureManager().register(playerAvatarTexture, new DynamicTexture(String::new, NativeImage.read(fileInputStream)));
+        try (FileInputStream fileInputStream = new FileInputStream(FabricLoader.getInstance().getGameDir().resolve("cache/tiers/players/" + playerProfile.uuid + ".png").toFile()); NativeImage image = NativeImage.read(fileInputStream)) {
+            Minecraft.getInstance().getTextureManager().registerProvider(playerAvatarTexture, new ExternalTextureProvider(TextureResources.from2dImage(String::new, image)));
             imageReady = true;
         } catch (IOException ignored) {
             LOGGER.warn("Error loading player skin");
@@ -273,7 +274,7 @@ public class PlayerSearchResultScreen extends Screen {
         dimensionsWarning = Button.builder(Component.literal("ℹ"), (_) -> {
         }).bounds(width - 20 - 5, 5, 20, 20).tooltip(Tooltip.create(Component.literal("Your window dimensions (" + width + "x" + height + ") are small\nLower the GUI scale or make the window bigger to have a better experience (ideal: 575x420)"))).build();
         dimensionsWarning.active = false;
-        dimensionsWarning.visible = small;
+        dimensionsWarning.setVisible(small);
         if (tooSmall) {
             dimensionsWarning.setMessage(Component.literal("⚠"));
             dimensionsWarning.setTooltip(Tooltip.create(Component.literal("Your window dimensions (" + width + "x" + height + ") are too small\nLower the GUI scale or make the window bigger! (min: 430x262)")));

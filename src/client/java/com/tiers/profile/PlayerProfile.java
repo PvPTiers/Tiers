@@ -507,7 +507,7 @@ public class PlayerProfile {
         ArrayList<StyledChar> characters = new ArrayList<>();
         StringBuilder fullBuilder = new StringBuilder();
 
-        original.visit((style, string) -> {
+        original.visitUnbounded((style, string) -> {
             fullBuilder.append(string);
             for (int i = 0; i < string.length(); i++)
                 characters.add(new StyledChar(string.charAt(i), style));

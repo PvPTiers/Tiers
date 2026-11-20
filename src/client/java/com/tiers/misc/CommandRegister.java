@@ -10,25 +10,42 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.suggestions.SuggestionContext;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class CommandRegister {
     private static final SuggestionProvider<FabricClientCommandSource> PLAYERS = (_, suggestionsBuilder) -> suggestPlayers(suggestionsBuilder);
+    private static final List<Map.Entry<String, String>> COMMANDS = List.of(
+            Map.entry("-toggle", "Toggle Tiers"),
+            Map.entry("-config", "Open Tiers config screen"),
+            Map.entry("-help", "Show Tiers help"),
+            Map.entry("-debug", "Show Tiers debug info"),
+            Map.entry("-clear", "Clear cached Tiers data"),
+            Map.entry("-reset", "Reset Tiers settings"),
+            Map.entry("-status", "Show Tiers status")
+    );
 
     private static CompletableFuture<Suggestions> suggestPlayers(SuggestionsBuilder suggestionsBuilder) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null || minecraft.getConnection() == null)
             return suggestionsBuilder.buildFuture();
 
-        for (PlayerInfo playerListEntry : minecraft.getConnection().getOnlinePlayers())
-            if (SharedSuggestionProvider.matchesSubStr(suggestionsBuilder.getRemaining().toLowerCase(Locale.ROOT), playerListEntry.getProfile().name().toLowerCase(Locale.ROOT)) && playerListEntry.getProfile().name().length() > 2)
-                suggestionsBuilder.suggest(playerListEntry.getProfile().name(), () -> "Search tiers for " + playerListEntry.getProfile().name());
+        String remaining = suggestionsBuilder.getRemaining().toLowerCase(Locale.ROOT);
 
-        if (SharedSuggestionProvider.matchesSubStr(suggestionsBuilder.getRemaining().toLowerCase(Locale.ROOT), "-config"))
-            suggestionsBuilder.suggest("-config", () -> "Open Tiers config screen");
+        for (PlayerInfo playerListEntry : minecraft.getConnection().getOnlinePlayers()) {
+            String name = playerListEntry.getProfile().name();
+            if (name.length() > 2 && SuggestionContext.matchesSubStr(remaining, name.toLowerCase(Locale.ROOT)))
+                suggestionsBuilder.suggest(name, () -> "Search tiers for " + name);
+        }
+
+        boolean showAllCommands = remaining.startsWith("-");
+        for (Map.Entry<String, String> command : COMMANDS)
+            if ((showAllCommands || command.getKey().equals("-config")) && SuggestionContext.matchesSubStr(remaining, command.getKey()))
+                suggestionsBuilder.suggest(command.getKey(), command::getValue);
 
         return suggestionsBuilder.buildFuture();
     }

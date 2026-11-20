@@ -18,7 +18,7 @@ The official tier display mod for [PvPTiers](https://pvptiers.com). Also support
 
 * **`Auto-detect kit:`** Press **Y** (editable) to auto-detect the gamemode you are playing, allowing you to easily switch and see opponent tiers in that specific mode.
 * **`See nearest player stats:`** Press **H** (editable) to open the closest player's search result screen.
-* **`Search screen:`** See all tiers, peaks, regions, points, global rankings, and skin with **/tiers name**.
+* **`Search screen:`** See all tiers, peaks, regions, points, global rankings, skin, NameMC page, and Discord profile with **/tiers name**.
 * **`Change gamemodes and their position:`** Choose a gamemode for each ranking site and decide whether to display it on the left or right.
 * **`Cycle keybinds:`** Press **U** and **I** (editable) to easily cycle between the right and left displayed gamemodes.
 * **`Change preset styles:`** Change icon and color presets within the config screen.

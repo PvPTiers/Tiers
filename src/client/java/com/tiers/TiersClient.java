@@ -42,7 +42,6 @@ import net.minecraft.world.level.Level;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 
 import java.io.File;
@@ -352,7 +351,7 @@ public class TiersClient implements ClientModInitializer {
             setScreen(ConfigScreen.getConfigScreen(null));
         else if (playerName.equalsIgnoreCase("-reset"))
             resetSettings();
-        else if (playerName.equalsIgnoreCase("-help") || playerName.equalsIgnoreCase("-debug")) {
+        else if (playerName.equalsIgnoreCase("-help")) {
             sendMessageToPlayer(Icons.colorText("", CommonColors.WHITE), false);
             sendMessageToPlayer(Icons.colorText("--- Tiers help ---", CommonColors.YELLOW), false);
             sendMessageToPlayer(Component.literal("- General contact: ").append(Component.literal("flavio6561 on Discord").withStyle(style -> style.withUnderlined(true).withClickEvent(new ClickEvent.OpenUrl(URI.create("https://discordapp.com/users/715189608085716992"))))), false);
@@ -360,6 +359,8 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Component.literal("- It's not advisable to create tickets in PvPTiers support"), false);
             sendMessageToPlayer(Component.literal("- ").append(Component.literal("Changelogs").withStyle(style -> style.withUnderlined(true).withClickEvent(new ClickEvent.OpenUrl(URI.create("https://github.com/PvPTiers/Tiers/wiki/Version-changelogs"))))), false);
             sendMessageToPlayer(Component.literal("- ").append(Component.literal("Modrinth page").withStyle(style -> style.withUnderlined(true).withClickEvent(new ClickEvent.OpenUrl(URI.create("https://modrinth.com/mod/tiers"))))), false);
+        } else if (playerName.equalsIgnoreCase("-debug")) {
+            sendMessageToPlayer(Icons.colorText("", CommonColors.WHITE), false);
 
             String[] debugInfo = getDebugInfo();
             sendMessageToPlayer(Icons.colorText("\n" + debugInfo[0], CommonColors.SOFT_YELLOW), false);
@@ -406,7 +407,8 @@ public class TiersClient implements ClientModInitializer {
             sendMessageToPlayer(Icons.colorText("Not a valid command. Here's a list of valid commands:", "red"), false);
             sendMessageToPlayer(Icons.colorText("/tiers -toggle", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("/tiers -config", CommonColors.YELLOW), false);
-            sendMessageToPlayer(Icons.colorText("/tiers -help | /tiers -debug", CommonColors.YELLOW), false);
+            sendMessageToPlayer(Icons.colorText("/tiers -help", CommonColors.YELLOW), false);
+            sendMessageToPlayer(Icons.colorText("/tiers -debug", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("/tiers -clear", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("/tiers -reset", CommonColors.YELLOW), false);
             sendMessageToPlayer(Icons.colorText("/tiers -status", CommonColors.YELLOW), false);
@@ -442,7 +444,7 @@ public class TiersClient implements ClientModInitializer {
         debugInfo[1] += "Instance name: " + Minecraft.getInstance().name() + "\n";
         debugInfo[1] += "Game profile name: " + Minecraft.getInstance().getGameProfile().name() + "\n";
         debugInfo[1] += "OS info:\n\t" + System.getProperty("os.name") + "\n\t" + System.getProperty("os.version") + "\n\t" + System.getProperty("os.arch") + "\n";
-        CentralProcessor processor = (new SystemInfo()).getHardware().getProcessor();
+        CentralProcessor processor = (new oshi.ffm.SystemInfo().getHardware().getProcessor());
         String cpuInfo = String.format(Locale.ROOT, "%dx %s", processor.getLogicalProcessorCount(), processor.getProcessorIdentifier().getName()).replaceAll("\\s+", " ");
         debugInfo[1] += "CPU info: " + cpuInfo + "\n";
         Runtime runtime = Runtime.getRuntime();
